@@ -11,7 +11,7 @@ type Task = {
     createdAt: Date
 }
 
-const tasks: Task[] = loadTasks();
+var tasks: Task[] = loadTasks();
 
 tasks.forEach(addListItem);
 
@@ -26,6 +26,7 @@ addTaskForm?.addEventListener('submit' , e => {
         completed: false,
         createdAt: new Date()
     }
+    taskId++;
     addTaskName.value = "";
     tasks.push(task);
     addListItem(task);
@@ -35,17 +36,29 @@ function addListItem(task: Task): void{
     const listItem: HTMLLIElement = document.createElement('li');
     const label: HTMLLabelElement = document.createElement('label');
     const checkbox: HTMLInputElement = document.createElement('input');
+    const trashIcon: HTMLImageElement = document.createElement('img');
+    const taskTitle: HTMLSpanElement = document.createElement('span');
+
+    taskTitle.innerText = task.title;
+    trashIcon.setAttribute('src', 'public/trash.svg');
+    label.setAttribute('for', '"');
 
     checkbox.type = 'checkbox';
     checkbox.checked = task.completed;
     checkbox.addEventListener('change', () => {
         task.completed = checkbox.checked;
-        saveTasks()
+        saveTasks();
     });
 
-    label.append(checkbox, task.title);
+    trashIcon.addEventListener('click', () => {
+        deleteTask(task);
+    });
+
+    label.append(checkbox, taskTitle, trashIcon);
     listItem.append(label);
+    listItem.setAttribute('id', task.id.toString());
     list?.append(listItem);
+    saveTasks();
 }
 
 function saveTasks(): void {
@@ -56,4 +69,21 @@ function loadTasks(): Task[] {
     const taskJSON = localStorage.getItem('Tasks');
     if (taskJSON == null) return [];
     return JSON.parse(taskJSON);
+}
+
+function deleteTask(task: Task): void {
+    removeListItem(task);
+    tasks = tasks.filter(t => t.id !== task.id);
+    saveTasks();
+}
+
+function removeListItem(task: Task): void {
+    var liList = list?.querySelectorAll('li');
+    if (liList){
+        liList.forEach(li => {
+            if (li.getAttribute('id') != null && li.getAttribute('id') === task.id.toString()){
+                li.remove();
+            }
+        })
+    }
 }
